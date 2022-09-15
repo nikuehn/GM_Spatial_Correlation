@@ -2,7 +2,7 @@
 title: "Investigations into Spatial Correlations"
 author:
   - Nicolas Kuehn^[Unversity of California, Los Angeles, kuehn@ucla.edu]
-date: "22 February, 2022"
+date: "15 September, 2022"
 output:
   html_document:
   #pdf_document:
@@ -22,21 +22,21 @@ bibliography: /Users/nico/BIBLIOGRAPHY/BIBTEX/references.bib
 
 # Introduction
 
-This is some short investgation into the effects of unceranty on spatial correlations.
-I is not comprehensive, and certainly should not be seen as authoritative, but it raises some questions (at least for me).
+This is some short investigation into the effects of uncertainty on spatial correlations.
+It is not comprehensive, and certainly should not be seen as authoritative, but it raises some questions (at least for me).
 The results seem a bit extreme to me, but I wanted to write it up here so that I have a reference to where I can look up the code and results.
 
-In the reviews to @Kuehn2020, where we developed spatial correlations for event terms, Peter Stafford pointed out that event terms are associated with uncertainty (which can be quite substantial for events that are not well recorded), and ths should not be ignored for the spatial correlation models.
-At the very least, it affects the scale parameter, as ignoring uncertainty wil lead to an understmation of $\tau$.
-While looking into (non-stationary) spatial coelaton models for site terms, I noticed that the length scales I got when just using the estimated site terms were shorter than when estimating a full model (i.e. sie terms and spatial correlation of site terms at the same time).
-In nonergodic models based on varyng coefficient models [e.g. @Landwehr2016;@Lavrentiadis2021;@Kuehn2021], we estimate spatial corelations of constants and the model at the same time, so they take uncertainty in event and site terms nto account.
-The question I had was what happends for spatial correlation models of within-event (and within-site) residuals.
-Since event terms and site terms are uncertain, that means that he residuals when taking them out (i.e. wihin-event residual $\delta W$ and within-event/within-site residuals $\delta WS$) should be uncertain as well.
-Typically, spatial correlations models like @Jayaram2009a are estimated for within-event residuals of well-recorded events, so the uncerainty of $\delta W$ should be small, but I', not sure anyone has ever looked into this.
+In the reviews to @Kuehn2020, where we developed spatial correlations for event terms, Peter Stafford pointed out that event terms are associated with uncertainty (which can be quite substantial for events that are not well recorded), and this should not be ignored for the spatial correlation models.
+At the very least, it affects the scale parameter, as ignoring uncertainty will lead to an underestimation of $\tau$.
+While looking into (non-stationary) spatial correlation models for site terms [@Kuehn2022], I noticed that the length scales I got when just using the estimated site terms were shorter than when estimating a full model (i.e. site terms and spatial correlation of site terms at the same time).
+In nonergodic models based on varying coefficient models [e.g. @Landwehr2016;@Lavrentiadis2021;@Kuehn2021], we estimate spatial correlations of constants and the model at the same time, so they take uncertainty in event and site terms into account.
+The question I had was what happens for spatial correlation models of within-event (and within-site) residuals.
+Since event terms and site terms are uncertain, that means that he residuals when taking them out (i.e. within-event residual $\delta W$ and within-event/within-site residuals $\delta WS$) should be uncertain as well.
+Typically, spatial correlations models like @Jayaram2009a are estimated for within-event residuals of well-recorded events, so the uncertainty of $\delta W$ should be small, but I', not sure anyone has ever looked into this.
 $\delta WS$ should be more uncertain, since site terms are generally more uncertain (often less recordings per site), so they might be more affected.
-I think more models are movig towards partitioning into site terms, so one can probably expect spatial corelation models for $\delta WS$ to be coming out.
+I think more models are moving towards partitioning into site terms, so one can probably expect spatial correlation models for $\delta WS$ to be coming out.
 
-Here, I jsut simulate some data (spatially corelated observations from events/stations), and then fit models to see if I the true parameters can be estimated, using the tru data generating model, as well as a partitioned model.
+Here, I just simulate some data (spatially correlated observations from events/stations), and then fit models to see if I the true parameters can be estimated, using the true data generating model, as well as a partitioned model.
 Model estimation is doe with Stan [@Carpenter2016], and INLA [@Rue2009] is used for partitioning the residuals.
 The spatial correlation Stan model is similar to the one of @Stafford2018a; see also in @Kuehn2021c.
 
@@ -66,12 +66,12 @@ theme_set(theme_gray() +
             )
 )
 
-set_cmdstan_path('/Users/nico/GROUNDMOTION/SOFTWARE/cmdstan-2.29.0')
+set_cmdstan_path('/Users/nico/GROUNDMOTION/SOFTWARE/cmdstan-2.30.1')
 cmdstan_path()
 ```
 
 ```
-## [1] "/Users/nico/GROUNDMOTION/SOFTWARE/cmdstan-2.29.0"
+## [1] "/Users/nico/GROUNDMOTION/SOFTWARE/cmdstan-2.30.1"
 ```
 
 ```r
@@ -79,7 +79,7 @@ cmdstan_version()
 ```
 
 ```
-## [1] "2.29.0"
+## [1] "2.30.1"
 ```
 
 ```r
@@ -101,10 +101,10 @@ LongLatToUTM<-function(x,y,zone){
 
 # Data
 
-The simulation is done for realistic data distributions (number of evets, number of stations, number of records).
-Here, I use the Califorian subset of NGA W2 [@Ancheta2014], used by @Abrahamson2014.
-The data is read in, then coordinates are transformed to UTM coordinates, and event/sation indces are set to integer valus.
-Finally, we make a data frame of the whle data with the important variables.
+The simulation is done for realistic data distributions (number of events, number of stations, number of records).
+Here, I use the Californian subset of NGA W2 [@Ancheta2014], used by @Abrahamson2014.
+The data is read in, then coordinates are transformed to UTM coordinates, and event/station indices are set to integer values.
+Finally, we make a data frame of the while data with the important variables.
 
 
 ```r
@@ -158,7 +158,7 @@ data_reg <- data.frame(eq = eq,
 )
 ```
 
-Only a sbubset is used, with a minmum number of 10 records per event, ad getting rid of ``colocated'' stations (I combined stations tha are very close together to have the same station id, which causes some poblems).
+Only a subset is used, with a minimum number of 10 records per event, ad getting rid of ``colocated'' stations (I combined stations that are very close together to have the same station id, which causes some problems).
 
 
 ```r
@@ -231,7 +231,7 @@ for(i in 1:n_eq_used) {
 # Simulation of within-event/within-station data with different length scales
 
 
-Here, some data is generated accodng to the following model
+Here, some data is generated according to the following model
 $$
 \delta B \sim N(0, \tau) \\
 \delta S \sim N(0, \phi_{S2S}) \\
@@ -240,12 +240,12 @@ Y \sim GP(\delta B + \delta S, k(\vec{x}_s,\vec{x}_s')) \\
 k(\vec{x}_s,\vec{x}_s')) = \delta_{ij,eq} \left(\theta_1^2 \exp \left[- \frac{|\vec{x}_s - \vec{x}_s')|}{\ell}\right] + \theta_2^2 \delta_{ij,rec}\right)
 $$
 So basically, sample some event terms and stations terms from normal distributions, and then sample observations from a GP with mean event term plus station term, and exponential covariance function with some observation noise.
-The covariance matrix is zero if records ae not from the same event ($\delta_{ij,eq}$ is supposed to be a kronecker symbol for events, and similarly $\delta_{rec}$ for records; not the best notation, but should work).
+The covariance matrix is zero if records are not from the same event ($\delta_{ij,eq}$ is supposed to be a Kronecker symbol for events, and similarly $\delta_{rec}$ for records; not the best notation, but should work).
 We also use different length scales for the events, which are distributed according to a lognormal distribution.
-We have $\phi_{SS}^2 = \theta_1^2 + \theta_2^2$, which is modeled as $\theta_1^2 = \omega \phi_{SS}^2$ and $\theta_2^2 = (1 - \omega) \phi_{SS}^2$, and $\omega$ is beween 0 and 1.
+We have $\phi_{SS}^2 = \theta_1^2 + \theta_2^2$, which is modeled as $\theta_1^2 = \omega \phi_{SS}^2$ and $\theta_2^2 = (1 - \omega) \phi_{SS}^2$, and $\omega$ is between 0 and 1.
 
-The reason to have different length scales for each event has less to do with the simulaio, and moe to do with the fact tha I wanted to see whether it is possible to estimate the diffeent length scales and associated hyperparameters.
-This offers the possibility to do hat on real data, and possibly look into spatial correlations of length scales (but I am geting ahead of myself).
+The reason to have different length scales for each event has less to do with the simulation, and more to do with the fact that I wanted to see whether it is possible to estimate the different length scales and associated hyperparameters.
+This offers the possibility to do hat on real data, and possibly look into spatial correlations of length scales (but I am getting ahead of myself).
 
 Below we define the hyperparameters for simulation.
 
@@ -288,7 +288,7 @@ Synthetic data are simulated with Stan.
 ```r
 model <- 'gmm_sim_spatcorr_l'
 file <- file.path(dir_stan, sprintf("%s.stan", model))
-mod <- cmdstan_model(file, include_paths = c(file.path(dir_stan, 'stan_include')))
+mod <- cmdstan_model(file, include_paths = c(file.path(dir_stan, 'stan_include')), force_recompile = TRUE)
 mod$print()
 ```
 
@@ -383,7 +383,7 @@ ell_sim <- as.vector(subset(draws_sim, variable=c('ell'), regex=TRUE))
 ## Estimation with Stan -- full model
 
 Now, the model parameters are estimated, using the full model, i.e. event terms, station terms, all hyperparameters, length scales.
-The Stan code is simple, just moving parameter declarations to th `parameters` block, the sampling statements to the `model` block, and addig some priors.
+The Stan code is simple, just moving parameter declarations to the `parameters` block, the sampling statements to the `model` block, and adding some priors.
 I ran the model in a different session, so I'm just reading in the results now (it takes quite long to run).
 
 
@@ -450,7 +450,7 @@ summarise_draws(subset(draws_l, variable=c('omega', 'sigma', 'mu_log_ell', 'thet
 
 Now, I partition the data into event, station terms and residuals $\delta WS$, using INLA (I also tried `lmer`, and results are pretty much the same).
 Then, one can run a spatial correlation model on just the residuals.
-The standard deviaions match quite well the theoretical values.
+The standard deviations match quite well the theoretical values.
 
 
 ```r
@@ -475,7 +475,7 @@ print(1/sqrt(fit_inla_sim$summary.hyperpar$mean))
 ```
 
 ```
-## [1] 0.4893895 0.4314864 0.3832127
+## [1] 0.4894089 0.4330651 0.3836540
 ```
 
 ```r
@@ -484,10 +484,10 @@ print(c(mean(dat_used$deltaWS_sim), sd(dat_used$deltaWS_sim)))
 ```
 
 ```
-## [1] 6.483488e-06 4.567840e-01
+## [1] 6.415224e-06 4.567130e-01
 ```
 
-Below is a histogram of the standard deviaions of the fitted values.
+Below is a histogram of the standard deviations of the fitted values.
 Since the residuals are just the observations (constant values) minus the fitted values, this should also be the standard deviations of the within-event/within-station residuals.
 Most are between 0.1 and 0.15, which is not small for ground-motion data.
 
@@ -537,14 +537,14 @@ fit_dws_l$time()
 
 ```
 ## $total
-## [1] 9542.262
+## [1] 11398.85
 ## 
 ## $chains
 ##   chain_id  warmup sampling   total
-## 1        1 4483.79  378.343 4862.13
-## 2        2 4349.74  345.786 4695.53
-## 3        3 3994.38  254.165 4248.55
-## 4        4 4461.45  214.078 4675.53
+## 1        1 5704.32  789.054 6493.38
+## 2        2 5760.54  936.481 6697.02
+## 3        3 4004.10  332.726 4336.82
+## 4        4 4322.43  373.656 4696.08
 ```
 
 Results are not as good as before.
@@ -560,12 +560,12 @@ summarise_draws(subset(draws_dws_l, variable=c('omega', 'sigma', 'mu_log_ell', '
 ## # A tibble: 6 × 10
 ##   variable       mean median      sd     mad    q5   q95  rhat ess_bulk ess_tail
 ##   <chr>         <dbl>  <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>    <dbl>    <dbl>
-## 1 omega         0.716  0.716 0.0330  0.0348  0.663 0.768  1.01    323.      464.
-## 2 sigma_rec     0.461  0.461 0.00416 0.00416 0.454 0.467  1.01   1094.      732.
-## 3 sigma_log_ell 0.460  0.454 0.0777  0.0795  0.344 0.599  1.03     59.3     188.
-## 4 mu_log_ell    1.87   1.87  0.0950  0.0972  1.71  2.01   1.02     84.7     186.
-## 5 theta         0.389  0.390 0.0101  0.0103  0.373 0.406  1.00    561.      687.
-## 6 theta2        0.245  0.245 0.0141  0.0145  0.222 0.268  1.01    287.      397.
+## 1 omega         0.465  0.465 0.0452  0.0461  0.391 0.540  1.01    235.     502. 
+## 2 sigma_rec     0.631  0.630 0.00539 0.00533 0.622 0.639  1.02   1197.     551. 
+## 3 sigma_log_ell 0.519  0.515 0.115   0.121   0.329 0.722  1.15     20.7     33.7
+## 4 mu_log_ell    1.69   1.70  0.130   0.127   1.45  1.87   1.05     69.6    194. 
+## 5 theta         0.429  0.429 0.0219  0.0216  0.393 0.465  1.01    245.     533. 
+## 6 theta2        0.461  0.462 0.0193  0.0189  0.427 0.491  1.01    248.     473.
 ```
 
 ## Estimation with Variograms
@@ -573,7 +573,7 @@ summarise_draws(subset(draws_dws_l, variable=c('omega', 'sigma', 'mu_log_ell', '
 Now, estimation is done with traditional geostatistics using a variogram.
 Variograms are calculated and fitted with package `gstat`.
 For each event, a variogram is calculated, and the exponential model is fitted.
-I'm just using the default settings of `variogram`, which gives some warnings for fiting for multiple events (in particular for small number of records).
+I'm just using the default settings of `variogram`, which gives some warnings during fitting for multiple events (in particular for small number of records).
 
 
 
@@ -622,7 +622,7 @@ print(p)
 ```
 
 ```
-## Warning: Removed 96 rows containing non-finite values (stat_bin).
+## Warning: Removed 97 rows containing non-finite values (stat_bin).
 ```
 
 <img src="pictures/sim1-inla-hist-1.png" width="50%" /><img src="pictures/sim1-inla-hist-2.png" width="50%" />
@@ -717,11 +717,11 @@ print(p)
 The length scales are quite well estimated  with the correct model, but are underestimated (with Stan) when using just the residuals.
 The variogram values are all over the place, but are ok for well-recorded events ($N_{rec} > 80$).
 One can probably get some sort of visual quality assurance from the variograms.
-I'm nor too familiar with variogram estimation, and I guess it's nice to get some warnings (meanin), but it seems there are a lot of little tweaks one can do, and a bad fit might be hard to detect.
-On the other hand, similar things apply to the GP estimation, as the model based on the within-event residuals converges well, but gves biased length scales.
+I'm not too familiar with variogram estimation, and I guess it's nice to get some warnings, but it seems there are a lot of little tweaks one can do, and a bad fit might be hard to detect.
+On the other hand, similar things apply to the GP estimation, as the model based on the within-event residuals converges well, but gives biased length scales.
 I'm a bit surprised that the variograms give reasonable estimates of the length scales (at least for well-recorded events), even though the uncertainty in the target variable ($\delta WS$) is ignored.
-For the GP estimation, the hierarchical nature (the event-specific length scales are basically random effects) means that the length scales ae somwwhat constrained.
-Nt sure if ne can do that as well with the variograms -- I guess one could calculate variograms, and then fit the same model with some random effects structure to it.
+For the GP estimation, the hierarchical nature (the event-specific length scales are basically random effects) means that the length scales are somewhat constrained.
+Not sure if one can do that as well with the variograms -- I guess one could calculate variograms, and then fit the same model with some random effects structure to it.
 
 # Simulation of withi-event/within-station data with same length scale
 
@@ -732,7 +732,7 @@ $$
 Y \sim GP(\delta B + \delta S, k(\vec{x}_s,\vec{x}_s')) \\
 k(\vec{x}_s,\vec{x}_s')) = \delta_{ij,eq} \left(\theta_1^2 \exp \left[- \frac{|\vec{x}_s - \vec{x}_s')|}{\ell}\right] + \theta_2^2 \delta_{ij,rec}\right)
 $$
-Same model as before, but he lengh scale is the same for each event.
+Same model as before, but he length scale is the same for each event.
 Below are the hyperparameters (length scale of 10km).
 
 ```r
@@ -770,7 +770,7 @@ Synthetic data are simulated with Stan.
 ```r
 model <- 'gmm_sim_spatcorr'
 file <- file.path(dir_stan, sprintf("%s.stan", model))
-mod <- cmdstan_model(file, include_paths = c(file.path(dir_stan, 'stan_include')))
+mod <- cmdstan_model(file, include_paths = c(file.path(dir_stan, 'stan_include')), force_recompile = TRUE)
 mod$print()
 ```
 
@@ -849,7 +849,7 @@ fit_sim <- mod$sample(
 ## Running MCMC with 1 chain...
 ## 
 ## Chain 1 Iteration: 1 / 1 [100%]  (Sampling) 
-## Chain 1 finished in 0.0 seconds.
+## Chain 1 finished in 0.1 seconds.
 ```
 
 ```r
@@ -864,7 +864,7 @@ deltaS_sim <- as.vector(subset(draws_sim, variable=c('statterm'), regex=TRUE))
 ## Estimation with Stan -- full model
 
 Now, the model parameters are estimated, using the full model, i.e. event terms, station terms, all hyperparameters, length scales.
-The Stan code is simple, just moving parameter declarations to th `parameters` block, the sampling statements to the `model` block, and addig some priors.
+The Stan code is simple, just moving parameter declarations to th `parameters` block, the sampling statements to the `model` block, and adding some priors.
 I ran the model in a different session, so I'm just reading in the results now (it takes quite long to run).
 
 
@@ -993,7 +993,7 @@ summarise_draws(subset(draws_l2, variable=c('omega', 'sigma','theta'), regex=TRU
 
 Now, I partition the data into event, station terms and residuals $\delta WS$, using INLA (I also tried `lmer`, and results are pretty much the same).
 Then, one can run a spatial correlation model on just the residuals.
-The standard deviaions match quite well the theoretical values.
+The standard deviations match quite well the theoretical values.
 
 
 ```r
@@ -1018,7 +1018,7 @@ print(1/sqrt(fit_inla_sim$summary.hyperpar$mean))
 ```
 
 ```
-## [1] 0.4902325 0.4299815 0.3871449
+## [1] 0.4902871 0.4277344 0.3871242
 ```
 
 ```r
@@ -1027,10 +1027,10 @@ print(c(mean(dat_used$deltaWS_sim), sd(dat_used$deltaWS_sim)))
 ```
 
 ```
-## [1] 7.519280e-06 4.574384e-01
+## [1] 7.465605e-06 4.574616e-01
 ```
 
-Below is a histogram of the standard deviaions of the fitted values.
+Below is a histogram of the standard deviations of the fitted values.
 Since the residuals are just the observations (constant values) minus the fitted values, this should also be the standard deviations of the within-event/within-station residuals.
 Most are between 0.1 and 0.15, which is not small for ground-motion data.
 
@@ -1161,7 +1161,7 @@ print(p)
 ```
 
 ```
-## Warning: Removed 109 rows containing non-finite values (stat_bin).
+## Warning: Removed 110 rows containing non-finite values (stat_bin).
 ```
 
 ```r
@@ -1234,21 +1234,21 @@ for(i in eq80) {
 
 ## Discussion
 
-As before, the full Stan model can recover the paremeters quite well, but when estimating on just $\delta WS$, the length scale is underestimated.
+As before, the full Stan model can recover the parameters quite well, but when estimating on just $\delta WS$, the length scale is underestimated.
 The variogram estimates are all over the place, which might be sort of expected, but for well-recorded events things look ok (I am again a bit surprised by this).
-The nugge values are quite bad though.
+The nugget values are quite bad though.
 When estimating a different length scale for the events with a Bayesian GP model (non-hierarchical), most length scales are close to 10km; the prior probably helps, though it is quite wide.
 For that model I also assume the same variance for all events, so that probably helps too.
-The random effects model for the length scales had problems converging, probably because `sigma_log_ell` is actualy zero, so we get some issues there.
+The random effects model for the length scales had problems converging, probably because `sigma_log_ell` is actual zero, so we get some issues there.
 
 # Simulation of within-event/within-station data with spatially corelated length scales
 
 
-Now, this simulation is similar to the first ne (differet length scales for each event), but now the length scales are assumed to be spatially correlated (with a GP).
+Now, this simulation is similar to the first one (different length scales for each event), but now the length scales are assumed to be spatially correlated (with a GP).
 
 The length scales are distributed according to
 $$
-\ln ell \sim GP(\mu_{\ln \ell}, k(\vec{x}_e,\vec{x}_e')) \\
+\ln \ell \sim GP(\mu_{\ln \ell}, k(\vec{x}_e,\vec{x}_e')) \\
 k(\vec{x}_e,\vec{x}_e') = \sigma_{\ln \ell}^2 \exp \left[ -\frac{|\vec{x}_e - \vec{x}_e'|}{\ell_\ell}\right]
 $$
 where $\ell_\ell$ is the length scale of the length scales (a bit unfortunate name).
@@ -1390,7 +1390,7 @@ ell_sim <- as.vector(subset(draws_sim, variable=c('ell'), regex=TRUE))
 
 ## Estimation with Stan -- full model wth different length scales (not spatialy correlated)
 
-This is estimation of th mode parameters, with length scales as a random effect, but not spatially correlated.
+This is estimation of the model parameters, with length scales as a random effect, but not spatially correlated.
 
 
 ```r
@@ -1481,8 +1481,8 @@ print(p)
 
 ## Estimation with Stan -- full model with spatialy correlated length scales
 
-Now, the ull model is estimated, with spatially correlation of the length scales included (i.e. the length scale of length scales is estimated as well).
-The GP for the length scales is parameterized in a non-centered parameterization; I tried out a centered one, but got sme divergences and large Rhat values.
+Now, the full model is estimated, with spatially correlation of the length scales included (i.e. the length scale of length scales is estimated as well).
+The GP for the length scales is parameterized in a non-centered parameterization; I tried out a centered one, but got some divergences and large Rhat values.
 The non-centered version fits fine.
 
 
@@ -1535,17 +1535,18 @@ summarise_draws(subset(draws_lcorrnc,
 
 ```
 ## # A tibble: 9 × 10
-##   variable    mean median      sd     mad     q5     q95  rhat ess_bulk ess_tail
-##   <chr>      <dbl>  <dbl>   <dbl>   <dbl>  <dbl>   <dbl> <dbl>    <dbl>    <dbl>
-## 1 omega      0.764  0.764 2.93e-2 2.95e-2  0.717   0.812  1.00     591.     724.
-## 2 sigma_rec  0.503  0.503 5.26e-3 5.43e-3  0.495   0.512  1.00     754.     659.
-## 3 sigma_eq   0.402  0.401 2.15e-2 2.16e-2  0.368   0.438  1.00     754.     587.
-## 4 sigma_st…  0.384  0.384 1.14e-2 1.10e-2  0.366   0.404  1.01     510.     692.
-## 5 sigma_lo…  0.610  0.593 1.37e-1 1.30e-1  0.410   0.837  1.00     351.     471.
-## 6 mu_log_e…  2.15   2.15  2.41e-1 2.09e-1  1.75    2.54   1.02     281.     218.
-## 7 range_ell 68.7   56.9   4.59e+1 3.00e+1 24.5   146.     1.01     318.     441.
-## 8 theta      0.440  0.440 9.75e-3 1.06e-2  0.424   0.455  1.00     752.     538.
-## 9 theta2     0.244  0.245 1.54e-2 1.52e-2  0.217   0.268  1.00     552.     670.
+##   variable      mean median      sd     mad     q5     q95  rhat ess_b…¹ ess_t…²
+##   <chr>        <dbl>  <dbl>   <dbl>   <dbl>  <dbl>   <dbl> <dbl>   <dbl>   <dbl>
+## 1 omega        0.764  0.764 2.93e-2 2.95e-2  0.717   0.812  1.00    591.    724.
+## 2 sigma_rec    0.503  0.503 5.26e-3 5.43e-3  0.495   0.512  1.00    754.    659.
+## 3 sigma_eq     0.402  0.401 2.15e-2 2.16e-2  0.368   0.438  1.00    754.    587.
+## 4 sigma_stat   0.384  0.384 1.14e-2 1.10e-2  0.366   0.404  1.01    510.    692.
+## 5 sigma_log_…  0.610  0.593 1.37e-1 1.30e-1  0.410   0.837  1.00    351.    471.
+## 6 mu_log_ell   2.15   2.15  2.41e-1 2.09e-1  1.75    2.54   1.02    281.    218.
+## 7 range_ell   68.7   56.9   4.59e+1 3.00e+1 24.5   146.     1.01    318.    441.
+## 8 theta        0.440  0.440 9.75e-3 1.06e-2  0.424   0.455  1.00    752.    538.
+## 9 theta2       0.244  0.245 1.54e-2 1.52e-2  0.217   0.268  1.00    552.    670.
+## # … with abbreviated variable names ¹​ess_bulk, ²​ess_tail
 ```
 
 ```r
@@ -1632,7 +1633,7 @@ print(1/sqrt(fit_inla_sim$summary.hyperpar$mean))
 ```
 
 ```
-## [1] 0.4871764 0.4273914 0.3887061
+## [1] 0.4869975 0.4277939 0.3892497
 ```
 
 ```r
@@ -1641,10 +1642,10 @@ print(c(mean(dat_used$deltaWS_sim), sd(dat_used$deltaWS_sim)))
 ```
 
 ```
-## [1] 6.638173e-06 4.543642e-01
+## [1] 6.568628e-06 4.542640e-01
 ```
 
-Below is a histogram of the standard deviaions of the fitted values.
+Below is a histogram of the standard deviations of the fitted values.
 Since the residuals are just the observations (constant values) minus the fitted values, this should also be the standard deviations of the within-event/within-station residuals.
 
 
@@ -1663,7 +1664,7 @@ ggplot(df_plot) +
 
 ## Estimation with Stan on $\delta WS$ -- no spatial correlation
 
-Estimate spatial correlation parameters (different lenght scales for each even), but no spatial correlation of length scales.
+Estimate spatial correlation parameters (different length scales for each even), but no spatial correlation of length scales.
 
 
 ```r
@@ -1769,7 +1770,7 @@ print(p)
 <img src="pictures/sim3-est-vario-plots-1.png" width="50%" /><img src="pictures/sim3-est-vario-plots-2.png" width="50%" />
 
 Below are plots of the variograms for events with at least 80 records.
-The theoretical varigram (based on smulation values) is in red, th estimated in blue or black.
+The theoretical variogram (based on simulation values) is in red, th estimated in blue or black.
 Black if the length-scale residual is small, blue if large.
 
 
@@ -1808,5 +1809,22 @@ for(i in eq80) {
 ```
 
 <img src="pictures/sim3-est-vario-plots2-1.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-2.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-3.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-4.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-5.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-6.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-7.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-8.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-9.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-10.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-11.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-12.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-13.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-14.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-15.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-16.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-17.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-18.png" width="50%" /><img src="pictures/sim3-est-vario-plots2-19.png" width="50%" />
+
+# Overall Discussion
+
+In general, the different spatial correlation models can be estimated quite well, using the NGA West2 data set (i.e. a realistic data distribution).
+The Bayesian model and using a prior as a regularization helps to constrain length scales for the different events, and the length scales are well estimated even for small number of records.
+This is very much not the case for variograms, which are all over the place, and require a lot more care when selecting ``good'' events for estimation.
+
+The simulations have shown that length scales are underestimated when estimated on $\delta WS$, ad no while estimating all random effects.
+This also happens when estimating length scales of site terms (though not investigated here).
+This could potentially have repercussions for published spatial correlation models, though they should be ok given they are based on well-recorded events, and thus uncertainty in the residuals is small.
+Overall though I believe that one should try and estimate these things all together.
+
+I tried estimating the models presented here on real data, and it does not work, suggesting that the spatial correlation structure is more complicated than the simple isotropic/stationary GP used in these models.
+The problem is that I get consistently very low estimates of $\tau$, accompanied with very long length scales.
+I think what is happening is that fo long length scales, the correlation between records becomes close to one, so the GP essentially works the same way as $\tau$.
+Other studies have found lower $\tau$ before when estimating spatial correlations at the same time as other model parameters [@Stafford2018a,@Jayaram2010a], but I'm not sure if s the same phenomenon (they seem to get reasonable results otherwise).
+This needs some further investigation.
 
 # References
