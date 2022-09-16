@@ -31,8 +31,8 @@ At the very least, it affects the scale parameter, as ignoring uncertainty will 
 While looking into (non-stationary) spatial correlation models for site terms [@Kuehn2022], I noticed that the length scales I got when just using the estimated site terms were shorter than when estimating a full model (i.e. site terms and spatial correlation of site terms at the same time).
 In nonergodic models based on varying coefficient models [e.g. @Landwehr2016;@Lavrentiadis2021;@Kuehn2021], we estimate spatial correlations of constants and the model at the same time, so they take uncertainty in event and site terms into account.
 The question I had was what happens for spatial correlation models of within-event (and within-site) residuals.
-Since event terms and site terms are uncertain, that means that he residuals when taking them out (i.e. within-event residual $\delta W$ and within-event/within-site residuals $\delta WS$) should be uncertain as well.
-Typically, spatial correlations models like @Jayaram2009a are estimated for within-event residuals of well-recorded events, so the uncertainty of $\delta W$ should be small, but I', not sure anyone has ever looked into this.
+Since event terms and site terms are uncertain, that means that the residuals when taking them out (i.e. within-event residual $\delta W$ and within-event/within-site residuals $\delta WS$) should be uncertain as well.
+Typically, spatial correlations models like @Jayaram2009a are estimated for within-event residuals of well-recorded events, so the uncertainty of $\delta W$ should be small, but I'm not sure anyone has ever looked into this.
 $\delta WS$ should be more uncertain, since site terms are generally more uncertain (often less recordings per site), so they might be more affected.
 I think more models are moving towards partitioning into site terms, so one can probably expect spatial correlation models for $\delta WS$ to be coming out.
 
@@ -83,6 +83,7 @@ cmdstan_version()
 ```
 
 ```r
+# Path where stan models are
 dir_stan <- "/Users/nico/GROUNDMOTION/PROJECTS/NONERGODIC/SCENARIO_MAPS/COREG/STAN_SPATCORR"
 ```
 
@@ -158,7 +159,7 @@ data_reg <- data.frame(eq = eq,
 )
 ```
 
-Only a subset is used, with a minimum number of 10 records per event, ad getting rid of ``colocated'' stations (I combined stations that are very close together to have the same station id, which causes some problems).
+Only a subset is used, with a minimum number of 10 records per event, and getting rid of ``colocated'' stations (I combined stations that are very close together to have the same station id, which causes some problems).
 
 
 ```r
@@ -206,7 +207,7 @@ for (i in 1:n_stat_used) {
 dat_used$stat <- stat
 
 
-#### find indices of events, neeed to be sorted by event ids 
+#### find indices of events, need to be sorted by event ids 
 start <- vector(length = n_eq_used)
 end <- vector(length = n_eq_used)
 num_eq <- vector(length = n_eq_used)
@@ -723,7 +724,7 @@ I'm a bit surprised that the variograms give reasonable estimates of the length 
 For the GP estimation, the hierarchical nature (the event-specific length scales are basically random effects) means that the length scales are somewhat constrained.
 Not sure if one can do that as well with the variograms -- I guess one could calculate variograms, and then fit the same model with some random effects structure to it.
 
-# Simulation of withi-event/within-station data with same length scale
+# Simulation of within-event/within-station data with same length scale
 
 Here, some data is generated according to the following model (same as before, but same length scales for events)
 $$
@@ -849,7 +850,7 @@ fit_sim <- mod$sample(
 ## Running MCMC with 1 chain...
 ## 
 ## Chain 1 Iteration: 1 / 1 [100%]  (Sampling) 
-## Chain 1 finished in 0.1 seconds.
+## Chain 1 finished in 0.0 seconds.
 ```
 
 ```r
@@ -926,7 +927,7 @@ summarise_draws(subset(draws_l, variable=c('omega', 'sigma', 'ell','theta'), reg
 ## 7 theta2     0.243  0.243 0.0146  0.0139  0.219  0.266 1.00      626.     579.
 ```
 
-## Estimation with Stan -- full model with dfferent length scales (non-hierarchical)
+## Estimation with Stan -- full model with different length scales (non-hierarchical)
 
 Now, the model parameters are estimated, using the full model, i.e. event terms, station terms, all hyperparameters, length scales.
 Different length scales per event are estimated, but not as random effects.
