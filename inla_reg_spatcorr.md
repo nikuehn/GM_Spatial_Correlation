@@ -26,8 +26,6 @@ bibliography: /Users/nico/BIBLIOGRAPHY/BIBTEX/references.bib
 This documet contains code to estimtate empirical ground-motion models (GMMs), while taking spatial correlations (of within-event/within-site residuals) into account.
 The models are estimated with the R-INLA package (<https://www.r-inla.org/>) [@Rue2017].
 Such regressions are similar to the ones proposed by @Jayaram2010a and @Ming2019, but in a Bayesian context.
-The data is the Italian dat of the ITA18 model [@Lanzano2019], used also in @Caramenti2022.
-The underlying functional form is the same as for the ITA18 model.
 
 We fit a model of the form
 $$
@@ -35,8 +33,18 @@ Y = f(\vec{c},\vec{x}) + \delta B + \delta S + \delta C(\vec{t}_s) + \delta W_0
 $$
 where $\delta B$ and $\delta S$ are the typical event and site terms, and $\delta C(\vec{t}_s)$ is a spatially correlated within-event/within-site residual term, dependent on the spatial coordinate $\vec{t}_s$ of the stations.
 $f(\vec{c},\vec{x})$ is the base functional form, wth coefficients $\vec{c}$ and predictors $\vec{x}$.
+The data is the Italian dat of the ITA18 model [@Lanzano2019], used also in @Caramenti2022.
+The underlying functional form is the same as for the ITA18 model.
 
 Regressions are carried out using INLA @Rue2009 and the SPDE approximation @Lindgren2011.
+The spatial correlation model is a Mat\`ern covariance function with $\nu = 1$.
+$$
+\begin{aligned}
+\delta C &\sim GP(0, \phi_c^2 k(\vec{t}, \vec{t}')) \\
+k(\vec{t}, \vec{t}')) &= k(\vec{t}, \vec{t}') =  \frac{2^{(1 - \nu)}}{\Gamma(\nu)} (\kappa |\vec{t} - \vec{t}'|)^\nu K_\nu (\kappa |\vec{t} - \vec{t}'|)
+\end{aligned}
+$$
+The spatial range is defined as $\ell = \sqrt{8 \nu}/\kappa$.
 
 # Getting Started
 
@@ -75,6 +83,17 @@ minor_breaks <- rep(1:9, 21)*(10^rep(-10:10, each=9))
 
 cols <- c("darkblue", "dodgerblue1", "cadetblue2", "white")
 cols2 <- rev(cols)
+```
+
+Define the Mat\'ern correlation function.
+
+
+```r
+# Matern correlation
+cMatern <- function(h, nu, kappa) {
+  ifelse(h > 0, besselK(h * kappa, nu) * (h * kappa)^nu / 
+           (gamma(nu) * 2^(nu - 1)), 1)
+}
 ```
 
 # Data
@@ -148,6 +167,8 @@ prior_prec_phi0  <- list(prec = list(prior = 'pc.prec', param = c(0.4, 0.01)))
 prior_prec_cell <- list(prec = list(prior = 'pc.prec', param = c(1, 0.01))) 
 ```
 
+
+## Base Model without Spatial Correlation
 First, fit base models without spatial correlations (one with event and site terms,
 one with only event terms).
 
@@ -181,8 +202,10 @@ data_reg$deltaW2 <- data_reg$Y -
   (fit_inla$summary.fitted.values$mean - fit_inla$summary.random$stat$mean[data_reg$stat])
 ```
 
+## Regression with Spatially Correlated within-event/within-site Residuals
+
 Next, estimate the model with spatial correlations.
-First, we define the mesh, and plot the mesh togethe with the dta, colorcoded by event.
+First, we define the mesh, and plot the mesh togethe with the data, color-coded by event.
 
 
 ```r
@@ -228,6 +251,7 @@ ggplot() + theme_bw() + gg(mesh) +
 
 <img src="pictures_inla/make-mesh-1.png" width="50%" />
 
+Now we define the SPDE model, the prjection matrix (using the group feature for the records from dfferent events), and fit the model.
 
 
 ```r
@@ -499,10 +523,40 @@ print(summary(fit_inla_cor_ns))
 
 # Model Comparison
 
+## WAIC
+
+First, we compare the models by the widely applicable information criterion (WAIC) [@Watanabe2013,@Vehtari2017].
+A lower value means better predictive capability.
+The base models do not include spatial correlations.
+
+
+```r
+data.frame(model =c("Base","Base only dB","Base cell","Stationary","Cell","Non-Stationary"),
+           waic = c(fit_inla$waic$waic, fit_inla_eq$waic$waic, fit_inla_cell$waic$waic,
+                    fit_inla_cor$waic$waic, fit_inla_cell_cor$waic$waic, fit_inla_cor_ns$waic$waic)) %>%
+  knitr::kable(digits = 2, row.names = FALSE,
+             caption = "Information Criteria (WAIC) for different INLA models
+             estimated on the Italian data.")
+```
+
+
+
+Table: Information Criteria (WAIC) for different INLA models
+             estimated on the Italian data.
+
+|model          |     waic|
+|:--------------|--------:|
+|Base           |  -780.83|
+|Base only dB   |  2398.77|
+|Base cell      | -1468.47|
+|Stationary     | -4872.50|
+|Cell           | -4913.97|
+|Non-Stationary | -5729.54|
+
 ## Posterior Plots
 
 First, plot the posterior of the spatial range of the models which include spatial correlation.
-For thenon-stationary model, we plot the value of the spatial range corresponding o $R_{EPI} = 0$km.
+For the non-stationary model, we plot the value of the spatial range corresponding to $R_{EPI} = 0$km.
 
 
 ```r
@@ -548,14 +602,70 @@ rbind(data.frame(fit_inla_cor$marginals.hyperpar$`Stdev for idx_rec_gr`, mod = "
 <p class="caption">Posterior distribution of phi_c for different models.</p>
 </div>
 
-## Plot of Correlations
+# Plot of Correlations
+
+## Correlation vs Distance
+
+Here, we plot the values of the Mat\'ern correlation function against separation distance, using the parameters from the stationary model.
+The uncertainty corresponds to the 95% uncertainty interval of the spatial range.
+
+
+```r
+nu <- 1
+range <- as.numeric(fit_inla_cor$summary.hyperpar[4,c("0.025quant", "0.5quant", "0.975quant")])
+kappa <- sqrt(8*nu)/range
+xv <- 1:200
+
+xlab <- 'distance (km)'
+ylab <- 'correlation'
+data.frame(x = xv, q025 = cMatern(xv, nu, kappa[1]), q05 = cMatern(xv, nu, kappa[2]),
+                 q975 = cMatern(xv, nu, kappa[3])) %>%
+  ggplot() +
+  geom_line(aes(x = x, y = q05)) +
+  geom_ribbon(aes(x = x, ymin = q025, ymax = q975), fill = 'gray', alpha = 0.6) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0,1.)) +
+  scale_x_continuous(expand = c(0, 0), limits = c(0,205.)) +
+  labs(x = xlab, y = ylab)
+```
+
+<img src="pictures_inla/corr-dist-1.png" width="50%" />
+
+## Spatial Range
+
+Now we plot the value of he spatial range, dependent n source-to-site distance, for the non-stationary model.
+
+
+```r
+xv <- 1:150
+xv2 <- xv
+xv2[xv > ref_d] <- ref_d
+xv2 <- xv2 / ref_d
+par_hyper <- fit_inla_cor_ns$summary.hyperpar$mean
+
+xlab <- 'epicentral distance (km)'
+ylab<- 'spatial range (km)'
+data.frame(x = xv, nonstationary = exp(par_hyper[5] + par_hyper[6] * xv2),
+                 stationary = fit_inla_cor$summary.hyperpar$mean[4]) %>%
+  pivot_longer(!x) %>%
+  ggplot() +
+  geom_line(aes(x = x, y = value, color = name), linewidth = lw) +
+  scale_y_continuous(limits = c(0,250), expand = c(0,0)) +
+  scale_x_continuous(limits = c(0,155), expand = c(0,0)) +
+  labs(x = xlab, y = ylab) +
+  theme(legend.position = c(0.2,0.8)) +
+  guides(color = guide_legend(title=NULL))
+```
+
+<img src="pictures_inla/length-scale-1.png" width="50%" />
+
+## Correlation kernels
 
 Now we plot the correlation kernel for the stationary and non-stationary correlation functions.
 The non-stationary correlation depends on the distance to the source, so is different for sies with different coordinates.
 
 We use the median of the posterior distribution as the parameters of the spatial correlation structure.
 First, we calculate the precision matrix using `inla.spde2.precision`, which is then used to calculate the correlation values at the mesh nodes.
-The function `book.spatial.correlation` is from @Krainsk2019 (<https://www.r-inla.org/learnmore/books>).
+The function `book.spatial.correlation` is from @Krainski2019 (<https://www.r-inla.org/learnmore/books>).
 
 
 ```r
