@@ -1,2 +1,2 @@
 # GM_Spatial_Correlation
-Some Stan models to estimate spatial correlations
+Some Stan nd INLA models to estimate ground-motion models including spatial correlations.
